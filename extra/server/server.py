@@ -9,8 +9,6 @@ from pygeotile.point import Point
 from pygeotile.tile import Tile
 from shapely.geometry import Polygon
 
-sys.path.append(os.path.curdir)
-
 from config import Config
 from dummy_cache import DummyCache
 from statics import Statics
