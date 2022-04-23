@@ -9,8 +9,6 @@ from shapely import geometry
 from shapely.geometry import Polygon
 from werkzeug import serving
 
-sys.path.append(os.path.curdir)
-
 from dummy_cache import DummyCache
 from statics import Statics
 
