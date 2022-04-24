@@ -13,11 +13,11 @@ import {
 } from "@/consts/custom-events";
 
 import { addCertificate } from "@/services/certificate";
-import { patchHostsFile, unpatchHostsFile } from "@/services/hosts";
 import { startMapServer, stopServer } from "@/services/mapServer";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import log from "electron-log";
+import got from "got";
 
 import path from "path";
 // @ts-ignore
@@ -115,19 +115,10 @@ if (isDevelopment) {
 }
 
 ipcMain.handle(EVENT_START_SERVER, async (event, arg) => {
-  log.info("Staring server with", JSON.stringify(arg));
-
-  try {
-    log.info("Trying to stop any nginx server");
-    await stopServer();
-  } catch (e) {
-    log.info("Stop nginx server with error but it can ignore", e);
-  }
-
   try {
     await addCertificate();
-    patchHostsFile();
-    await startMapServer(arg);
+    await startMapServer();
+    await got.get("http://localhost:39871/patch-hosts");
     log.info("Start map server success");
     return { success: true };
   } catch (e) {
@@ -148,7 +139,7 @@ ipcMain.handle(EVENT_STOP_SERVER, async (event, arg) => {
 });
 
 async function StopServer() {
-  unpatchHostsFile();
+  await got.get("http://localhost:39871/unpatch-hosts");
   await stopServer();
 }
 

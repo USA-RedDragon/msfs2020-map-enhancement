@@ -64,6 +64,25 @@ def health() -> str:
     return "alive"
 
 
+@app.route("/patch-hosts", methods=['GET'])
+def patch_hosts() -> Response:
+    hosts_file = "C:\\windows\\system32\\drivers\\etc\\hosts"
+    with open(hosts_file, 'at') as hosts:
+        hosts.write("\n127.0.0.1 kh.ssl.ak.tiles.virtualearth.net\r\n127.0.0.1 khstorelive.azureedge.net\r\n")
+    return Response(status=200)
+
+
+@app.route("/unpatch-hosts", methods=['GET'])
+def unpatch_hosts() -> Response:
+    hosts_file = "C:\\windows\\system32\\drivers\\etc\\hosts"
+    with open(hosts_file, 'rt') as hosts:
+        hosts_content = hosts.read()
+        hosts_content.replace('\n127.0.0.1 kh.ssl.ak.tiles.virtualearth.net\r\n127.0.0.1 khstorelive.azureedge.net\r\n', '')
+        with open(hosts_file, 'wt') as hosts_write:
+            hosts_write.write(hosts_content)
+    return Response(status=200)
+
+
 @app.route("/cache", methods=["DELETE"])
 def clear_cache() -> Response:
     cache.clear()

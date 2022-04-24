@@ -4,27 +4,26 @@ import path from "path";
 import log from "electron-log";
 import util from "util";
 
-const execAsync = util.promisify(execFile);
+const sudo = require('sudo-prompt');
+const options = {
+  name: 'MSFS2020 Map Enhancement'
+};
+
+const CONF_DIR = path.join(__dirname, "../extra/nginx/conf")
 
 export const addCertificate = async (): Promise<void> => {
   log.info("Adding certificate")
-  const { stdout } = await execAsync(
-    "mkcert.exe",
-    [
-      "-install",
-      "-key-file",
-      "key.pem",
-      "-cert-file",
-      "cert.pem",
-      "kh.ssl.ak.tiles.virtualearth.net",
-      "khstorelive.azureedge.net",
-      "*.virtualearth.net",
-      "*.azureedge.net",
-    ],
-    {
-      cwd: path.join(__dirname, "../extra/nginx/conf"),
-      shell: true,
-    }
-  );
-  log.info("Added certificate", stdout);
+  return new Promise((resolve, reject) => {
+    sudo.exec(`"${CONF_DIR}/mkcert.exe" -install -key-file "${CONF_DIR}/key.pem" -cert-file "${CONF_DIR}/cert.pem" kh.ssl.ak.tiles.virtualearth.net khstorelive.azureedge.net *.virtualearth.net *.azureedge.net`, options,
+      function(error: Error, stdout: string, stderr: string) {
+        if (error) {
+          reject(error);
+          return;
+        }
+        log.info("Added certificate", stdout);
+        resolve();
+      }
+    );
+  })
+  
 };
