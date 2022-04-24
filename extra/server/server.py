@@ -79,7 +79,7 @@ def get_config() -> Response:
 def post_config() -> Response:
     new_config = request.get_json(force=True)
 
-    config_store.inject(Config.json_loads(new_config))
+    config_store.inject(Config.from_json(new_config))
 
     init_cache()
     logger.info("Updated config %s", config_store.get_config().to_dict())
