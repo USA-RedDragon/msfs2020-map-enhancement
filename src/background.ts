@@ -42,6 +42,7 @@ async function createWindow() {
     fullscreenable: false,
     fullscreen: false,
     maximizable: false,
+    autoHideMenuBar: true,
     webPreferences: {
       nodeIntegration: process.env
         .ELECTRON_NODE_INTEGRATION as unknown as boolean,
