@@ -4,7 +4,6 @@ import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 import {
-  EVENT_CHECK_PORT,
   EVENT_CHECK_UPDATE,
   EVENT_START_GAME,
   EVENT_START_SERVER,
@@ -115,17 +114,26 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.handle(EVENT_START_SERVER, async (event, arg) => {
-  try {
-    await addCertificate();
-    await startMapServer();
-    await got.get("http://localhost:39871/patch-hosts");
+ipcMain.handle(EVENT_START_SERVER, (event, arg) => {
+  return new Promise<boolean>((resolve, reject) => {
+    addCertificate().then(() => {
+      startMapServer().then(() => {
+        got.get("http://localhost:39871/patch-hosts").then(() => {
     log.info("Start map server success");
-    return { success: true };
-  } catch (e) {
-    log.error("Start map server failed", e);
-    return { success: false, error: e };
-  }
+          resolve(true);
+        }).catch((e) => {
+          log.error(e);
+          reject(e);
+        });
+      }).catch((e) => {
+        log.error(e);
+        reject(e);
+      });
+    }).catch((e) => {
+      log.error(e);
+      reject(e);
+    });
+  });
 });
 
 ipcMain.handle(EVENT_STOP_SERVER, async (event, arg) => {
@@ -143,13 +151,6 @@ async function StopServer() {
   await got.get("http://localhost:39871/unpatch-hosts");
   await stopServer();
 }
-
-ipcMain.handle(EVENT_CHECK_PORT, async () => {
-  const tcpPortUsed = require("tcp-port-used");
-  const result = await tcpPortUsed.check(443, "127.0.0.1");
-  log.info("443 is in use:", result);
-  return result;
-});
 
 ipcMain.handle(EVENT_CHECK_UPDATE, async () => {
   autoUpdater.autoDownload = false;

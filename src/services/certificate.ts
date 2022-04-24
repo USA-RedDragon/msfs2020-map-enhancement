@@ -5,14 +5,14 @@ import fs from "fs";
 import log from "electron-log";
 import util from "util";
 
-const sudo = require('sudo-prompt');
+import sudo from "sudo-prompt";
 const options = {
   name: 'MSFS2020 Map Enhancement'
 };
 
 const CONF_DIR = path.join(__dirname, "../extra/nginx/conf")
 
-export const addCertificate = async (): Promise<void> => {
+export const addCertificate = (): Promise<void> => {
   log.info("Adding certificate if needed")
   return new Promise((resolve, reject) => {
     if (fs.existsSync(`${CONF_DIR}/key.pem`) && fs.existsSync(`${CONF_DIR}/cert.pem`)) {

@@ -5,6 +5,7 @@ export enum SERVER_STATUS {
   Stopped,
   Starting,
   Started,
+  Stopping,
 }
 
 export const HEALTH_CHECK_EVENT = "HEALTH_CHECK_EVENT";

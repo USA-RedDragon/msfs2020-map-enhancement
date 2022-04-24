@@ -7,7 +7,7 @@ import { IMAGE_SERVER_SERVICE, NGINX_SERVICE } from "../consts/constants";
 
 const execAsync = util.promisify(execFile);
 
-const sudo = require('sudo-prompt');
+import sudo from "sudo-prompt";
 const options = {
   name: 'MSFS2020 Map Enhancement',
 };
@@ -42,9 +42,7 @@ function isImageServerRunning(): Promise<boolean> {
       ]
     ).then((ret: { stdout: string, stderr: string }) => {
       const stateLine = ret.stdout.split("\n").filter( e => e.trim().startsWith("STATE"));
-      log.error(stateLine);
       const splitLine = stateLine[0].split(" ").filter( e => e.trim().length > 0);
-      log.error(splitLine);
       resolve(splitLine[3].trim().startsWith("RUNNING"))
     }).catch((e) => {
       reject(e);
@@ -75,17 +73,19 @@ export async function startMapServer(): Promise<void> {
           command += IMAGE_SERVER_SERVICE;
         }
 
-        if(startImageServer || startNginx) {
+        if (startImageServer || startNginx) {
           sudo.exec(command, options,
             function(error: Error, stdout: string, stderr: string) {
               if (error) {
                 reject(error);
                 return;
               }
-              resolve();
               log.info("Started servers");
+              resolve();
             }
           );
+        } else {
+          resolve();
         }
       });
     });
@@ -147,6 +147,8 @@ export async function stopServer(): Promise<void> {
               log.info("Stopped servers");
             }
           );
+        } else {
+          resolve();
         }
       }).catch((e) => {
         reject(e);

@@ -34,7 +34,6 @@
     "minimist": "^1.2.6",
     "moment": "^2.29.2",
     "sudo-prompt": "^9.2.1",
-    "tcp-port-used": "^1.0.2",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0"

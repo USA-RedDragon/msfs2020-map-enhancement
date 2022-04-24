@@ -10,7 +10,7 @@
                 <n-space horizontal size="large">
                   <n-switch
                     @update:value="handleServerToggle"
-                    :loading="serverStatus===SERVER_STATUS.Starting"
+                    :loading="serverStatus===SERVER_STATUS.Starting || serverStatus===SERVER_STATUS.Stopping"
                     size="large"
                     v-model:value="serverStarted"
                   >
@@ -73,7 +73,7 @@
 
 <script>
 import { defineComponent } from "vue";
-import { EVENT_CHECK_PORT, EVENT_START_GAME, EVENT_START_SERVER, EVENT_STOP_SERVER } from "@/consts/custom-events";
+import { EVENT_START_GAME, EVENT_START_SERVER, EVENT_STOP_SERVER } from "@/consts/custom-events";
 import got from "got";
 import Store from "electron-store";
 
@@ -148,7 +148,7 @@ export default defineComponent({
     }
   },
   async mounted() {
-    setTimeout(await this.check443Port, 500);
+    await this.startHealthCheck();
     if (this.autoInject) {
       this.serverStarted = true;
       await this.handleServerToggle(true);
@@ -162,35 +162,37 @@ export default defineComponent({
         await this.stopServer();
       }
     },
+    async startHealthCheck() {
+      if (this.imageAccessHealthCheckResult !== HEALTH_CHECK.Checking) {
+        this.imageAccessHealthCheckResult = HEALTH_CHECK.Checking;
+        setTimeout(await this.checkImageAccess);
+      }
+      if (this.nginxServerHealthCheckResult !== HEALTH_CHECK.Checking) {
+        this.nginxServerHealthCheckResult = HEALTH_CHECK.Checking;
+        setTimeout(await this.checkNginxServer);
+      }
+    },
     async startServer() {
       log.info("Starting mod");
-      this.imageAccessHealthCheckResult = HEALTH_CHECK.Checking;
-      this.nginxServerHealthCheckResult = HEALTH_CHECK.Checking;
       this.serverStatus = SERVER_STATUS.Starting;
 
-      const result = await window.ipcRenderer
-        .invoke(EVENT_START_SERVER);
-
-      log.info("Start mod result", result);
-
-      if (result.success) {
+      window.ipcRenderer.invoke(EVENT_START_SERVER).then(() => {
+        log.info("Start mod");
+        this.startHealthCheck();
         this.serverStatus = SERVER_STATUS.Started;
 
         this.firstTime = false;
         store.set("firstTime", this.firstTime);
 
-        setTimeout(await this.checkImageAccess, 8 * 1000);
-        setTimeout(await this.checkNginxServer, 8 * 1000);
-        setTimeout(await this.startGame);
-      } else {
+        setTimeout(this.startGame);
+      }).catch((e) => {
         this.serverStatus = SERVER_STATUS.Stopped;
 
         window.$message.error(
-          "Start server failed, error: " + result.error, messageOptions
+          "Start server failed, error: " + e, messageOptions
         );
-
-        log.info("Start mod failed", result.error);
-      }
+        log.error("Start mod failed: " + e)
+      });
     },
     async stopServer() {
       log.info("Stopping mod");
@@ -198,6 +200,7 @@ export default defineComponent({
       this.imageAccessHealthCheckResult = HEALTH_CHECK.NotStarted;
       this.nginxServerHealthCheckResult = HEALTH_CHECK.NotStarted;
 
+      this.serverStatus = SERVER_STATUS.Stopping;
       const result = await window.ipcRenderer.invoke(EVENT_STOP_SERVER);
       this.serverStatus = SERVER_STATUS.Stopped;
 
@@ -260,12 +263,6 @@ export default defineComponent({
       } catch (ex) {
         log.error("Image server error", ex);
         this.imageAccessHealthCheckResult = HEALTH_CHECK.Failed;
-      }
-    },
-    async check443Port() {
-      const result = await window.ipcRenderer.invoke(EVENT_CHECK_PORT);
-      if (result) {
-        window.$message.error("443 Port is using, the mod won't work. Please close any application using 443 port. Look at the FAQ page here: https://github.com/derekhe/msfs2020-google-map/wiki/FAQ#443-port-is-occupied", messageOptions);
       }
     },
     async startGame() {

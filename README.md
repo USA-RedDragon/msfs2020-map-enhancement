@@ -26,7 +26,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ## TODO
 
 - background.ts - add EVENT_ADD_STARTUP handling to set services to auto and add a startup shortcut
-- Something is causing UI to freeze while exec is happening. Move these to a new thread off the UI
 - Add CI
 - Add E2E tests
 - Add unit tests
