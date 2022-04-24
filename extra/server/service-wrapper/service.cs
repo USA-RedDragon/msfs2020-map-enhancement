@@ -27,7 +27,7 @@ namespace MapServices
                 ).ToString();
                 this.process.StartInfo.UseShellExecute = false;
                 this.process.StartInfo.FileName =  serverDir + "/python/python.exe";
-                this.process.StartInfo.Arguments = "server.py";
+                this.process.StartInfo.Arguments = "exception_wrapper.py";
                 this.process.StartInfo.CreateNoWindow = true;
                 this.process.StartInfo.WorkingDirectory = serverDir;
                 if (!this.process.Start()) {
