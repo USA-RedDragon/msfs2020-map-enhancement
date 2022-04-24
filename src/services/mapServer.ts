@@ -3,27 +3,93 @@ import path from "path";
 import log from "electron-log";
 import util from "util";
 
+import { IMAGE_SERVER_SERVICE, NGINX_SERVICE } from "../consts/constants";
+
+const execAsync = util.promisify(execFile);
+
 const sudo = require('sudo-prompt');
 const options = {
   name: 'MSFS2020 Map Enhancement',
 };
 
+function isNginxRunning(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    execAsync(
+      "sc.exe",
+      [
+        "query",
+        NGINX_SERVICE,
+        "type=service"
+      ]
+    ).then((ret: { stdout: string, stderr: string }) => {
+      const stateLine = ret.stdout.split("\n").filter( e => e.trim().startsWith("STATE"));
+      const splitLine = stateLine[0].split(" ").filter( e => e.trim().length > 0);
+      resolve(splitLine[3].trim().startsWith("RUNNING"))
+    }).catch((e) => {
+      reject(e);
+    });
+  });
+}
+
+function isImageServerRunning(): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    execAsync(
+      "sc.exe",
+      [
+        "query",
+        IMAGE_SERVER_SERVICE,
+        "type=service"
+      ]
+    ).then((ret: { stdout: string, stderr: string }) => {
+      const stateLine = ret.stdout.split("\n").filter( e => e.trim().startsWith("STATE"));
+      log.error(stateLine);
+      const splitLine = stateLine[0].split(" ").filter( e => e.trim().length > 0);
+      log.error(splitLine);
+      resolve(splitLine[3].trim().startsWith("RUNNING"))
+    }).catch((e) => {
+      reject(e);
+    });
+  });
+}
+
 export async function startMapServer(): Promise<void> {
-  log.info("Starting image server");
+  log.info("Starting image server if needed");
 
   return new Promise((resolve, reject) => {
-    sudo.exec('net start MSFS2020MapEnhancementImageServer & net start MSFS2020MapEnhancementNginx', options,
-      function(error: Error, stdout: string, stderr: string) {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-        log.info("Started servers");
-      }
-    );
-  })
+    let startNginx = false;
+    let startImageServer = false;
+    isNginxRunning().then((res) => {
+      startNginx = !res;
 
+      isImageServerRunning().then((res) => {
+        startImageServer = !res;
+
+        const commandPrefix = "net start ";
+        let command = commandPrefix;
+        if(startNginx) {
+          command += NGINX_SERVICE;
+        }
+        if(startNginx && startImageServer) {
+          command += " & " + commandPrefix + IMAGE_SERVER_SERVICE;
+        } else if(startImageServer) {
+          command += IMAGE_SERVER_SERVICE;
+        }
+
+        if(startImageServer || startNginx) {
+          sudo.exec(command, options,
+            function(error: Error, stdout: string, stderr: string) {
+              if (error) {
+                reject(error);
+                return;
+              }
+              resolve();
+              log.info("Started servers");
+            }
+          );
+        }
+      });
+    });
+  })
 }
 
 function setupLog(process: ChildProcess, name: string) {
@@ -50,15 +116,43 @@ export async function stopServer(): Promise<void> {
   log.info("Force killing server");
 
   return new Promise((resolve, reject) => {
-    sudo.exec('net stop MSFS2020MapEnhancementImageServer & net stop MSFS2020MapEnhancementNginx', options,
-      function(error: Error, stdout: string, stderr: string) {
-        if (error) {
-          reject(error);
-          return;
+    let stopNginx = false;
+    let stopImageServer = false;
+
+    isNginxRunning().then((res) => {
+      stopNginx = res;
+
+      isImageServerRunning().then((res) => {
+        stopImageServer = res;
+
+        const commandPrefix = "net stop ";
+        let command = commandPrefix;
+        if(stopNginx) {
+          command += NGINX_SERVICE;
         }
-        resolve();
-        log.info("Stopped servers");
-      }
-    );
-  })
+        if(stopNginx && stopImageServer) {
+          command += " & " + commandPrefix + IMAGE_SERVER_SERVICE;
+        } else if(stopImageServer) {
+          command += IMAGE_SERVER_SERVICE;
+        }
+
+        if (stopImageServer || stopNginx) {
+          sudo.exec(command, options,
+            function(error: Error, stdout: string, stderr: string) {
+              if (error) {
+                reject(error);
+                return;
+              }
+              resolve();
+              log.info("Stopped servers");
+            }
+          );
+        }
+      }).catch((e) => {
+        reject(e);
+      });
+    }).catch((e) => {
+      reject(e);
+    });
+  });
 }

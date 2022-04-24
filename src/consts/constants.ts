@@ -8,3 +8,6 @@ export enum SERVER_STATUS {
 }
 
 export const HEALTH_CHECK_EVENT = "HEALTH_CHECK_EVENT";
+
+export const IMAGE_SERVER_SERVICE = "MSFS2020MapEnhancementImageServer";
+export const NGINX_SERVICE = "MSFS2020MapEnhancementNginx";
