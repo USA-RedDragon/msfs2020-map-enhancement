@@ -6,7 +6,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
-        extraResources: ["./extra/**", "./extra/nginx/temp/**", "./public/icon.png", "!**/*.log"],
+        extraResources: ["./extra/server/**", "./extra/nginx/**", "./public/icon.png", "!**/logs/**", "!**/*.cs", "!**/*.ps1", "!**/*.gitignore"],
         productName: "MSFS2020 Map Enhancement",
         appId: "com.april1985.msfs2020-map-enhancement",
         win: {
