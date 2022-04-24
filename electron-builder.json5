@@ -10,12 +10,14 @@
     "output": "release/"
   },
   extraResources: [
-    "./extra/nginx",
-    "./extra/server/",
-    "./extra/nginx/temp/**",
-    "!**/*.log",
+    "./extra/nginx/**",
+    "./extra/server/**",
     "public/icon.png",
-    "*.lic"
+    "*.lic",
+    "!**/logs/**",
+    "!**/*.cs",
+    "!**/*.ps1",
+    "!**/*.gitignore"
   ],
   productName: "MSFS2020 Map Enhancement",
   appId: "com.april1985.msfs2020-map-enhancement",
