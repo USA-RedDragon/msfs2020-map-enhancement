@@ -13,6 +13,11 @@
   ExecWait '"sc.exe" "create" "${nginxServiceName}" displayname="${nginxDisplayName}" type=own start=demand binpath="$INSTDIR\resources\extra\nginx\service-wrapper\service.exe"'
 !macroend
 
+!macro customUnInit
+  ExecWait '"net.exe" "stop" "${nginxServiceName}"'
+  ExecWait '"net.exe" "stop" "${imageServerServiceName}"'
+!macroend
+
 !macro customUnInstall
   ExecWait '"sc.exe" "delete" "${nginxServiceName}"'
   ExecWait '"sc.exe" "delete" "${imageServerServiceName}"'
