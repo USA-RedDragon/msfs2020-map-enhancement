@@ -10,7 +10,10 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "electron:build": "vue-cli-service electron:build",
+    "build:python": "powershell -ExecutionPolicy Bypass -File extra/server/scripts/package.ps1",
+    "build:nginx": "powershell -ExecutionPolicy Bypass -File extra/nginx/scripts/package.ps1",
+    "build:service-wrappers": "powershell -ExecutionPolicy Bypass -File extra/compile-service-wrappers.ps1",
+    "electron:build": "npm run build:nginx && npm run build:python && npm run build:service-wrappers && vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
