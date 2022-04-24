@@ -81,12 +81,12 @@ class KHMGoogle(TileBasedMapProvider):
 
 
 class MapBox(TileBasedMapProvider):
-    def __init__(self, access_token):
+    def __init__(self, config_store):
         super().__init__("Mapbox")
-        self.access_token = access_token
+        self.config_store = config_store
 
     def tile_url(self, tile_x, tile_y, level_of_detail):
-        return f"https://api.mapbox.com/v4/mapbox.satellite/{level_of_detail}/{tile_x}/{tile_y}.jpg?sku=cky8e1hd40jus15nzunvf7q4u&access_token={self.access_token}"
+        return f"https://api.mapbox.com/v4/mapbox.satellite/{level_of_detail}/{tile_x}/{tile_y}.jpg?sku=cky8e1hd40jus15nzunvf7q4u&access_token={self.config_store.get_config().access_token}"
 
 
 class ArcGIS(TileBasedMapProvider):

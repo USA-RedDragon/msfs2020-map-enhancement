@@ -9,7 +9,7 @@ from pygeotile.point import Point
 from pygeotile.tile import Tile
 from shapely.geometry import Polygon
 
-from config import Config
+from config import Config, ConfigStore
 from dummy_cache import DummyCache
 from statics import Statics
 
@@ -31,39 +31,32 @@ from log import logger
 
 urllib3.disable_warnings()
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--proxyAddress', default=None, required=False)
-parser.add_argument('--selectedServer', default="mt.google.com")
-parser.add_argument('--cacheLocation', default="./cache", required=False)
-parser.add_argument('--cacheEnabled', default=False, required=False)
-parser.add_argument('--cacheSizeGB', default=10, required=False)
-parser.add_argument('--mapboxAccessToken', default="", required=False)
-parser.add_argument('--enableHighLOD', default=False, required=False)
-argv = parser.parse_args()
-
 app: Flask = Flask(__name__)
 
-server_configs = Config(proxyAddress=argv.proxyAddress, selectedServer=argv.selectedServer,
-                        cacheLocation=argv.cacheLocation,
-                        cacheEnabled=argv.cacheEnabled == 'true',
-                        cacheSizeGB=argv.cacheSizeGB,
-                        mapboxAccessToken=argv.mapboxAccessToken,
-                        enableHighLOD=argv.enableHighLOD == 'true')
+config_store = ConfigStore()
 
 server_statics = Statics(numOfImageLoaded=0, lastLoadingImageUrl="", lastLoadTime=datetime.utcnow())
 
 logger.info("Server started")
-logger.info("Started with configs %s", server_configs.__dict__)
+logger.info("Started with configs %s", config_store.get_config().to_dict())
 
-map_providers = [MTGoogle(), KHMGoogle(), ArcGIS(), BingMap(), MapBox(server_configs.mapboxAccessToken)]
+map_providers = [MTGoogle(), KHMGoogle(), ArcGIS(), BingMap(), MapBox(config_store)]
 last_image = None
 offline_download_thread = None
 
-if server_configs.cacheEnabled:
-    cache = FanoutCache(
-        server_configs.cacheLocation, size_limit=int(server_configs.cacheSizeGB) * 1024 * 1024 * 1024, shards=20)
-else:
-    cache = DummyCache()
+cache = None
+
+
+def init_cache():
+    global cache
+    if (not cache) or (isinstance(cache, FanoutCache) and not config_store.get_config().cacheEnabled):
+        cache = DummyCache()
+    if isinstance(cache, DummyCache) and config_store.get_config().cacheEnabled:
+        cache = FanoutCache(
+            config_store.get_config().cacheLocation, size_limit=int(config_store.get_config().cacheSizeGB) * 1024 * 1024 * 1024, shards=20)
+
+
+init_cache()
 
 
 @app.route("/health")
@@ -77,20 +70,21 @@ def clear_cache() -> Response:
     return Response(status=200)
 
 
-@app.route("/configs", methods=['POST'])
-def configs() -> Response:
-    global server_configs
-    new_configs = request.get_json(force=True)
+@app.route("/config", methods=['GET'])
+def get_config() -> Response:
+    return config_store.get_config().to_json()
 
-    if 'selectedServer' in new_configs:
-        server_configs.selectedServer = new_configs['selectedServer']
 
-    if 'proxyAddress' in new_configs:
-        server_configs.proxyAddress = new_configs['proxyAddress']
+@app.route("/config", methods=['POST'])
+def post_config() -> Response:
+    new_config = request.get_json(force=True)
 
-    logger.info("Updated configs %s", server_configs.__dict__)
+    config_store.inject(Config.json_loads(new_config))
 
-    return jsonify(server_configs)
+    init_cache()
+    logger.info("Updated config %s", config_store.get_config().to_dict())
+
+    return config_store.get_config().to_json()
 
 
 @app.route("/last-image")
@@ -118,7 +112,7 @@ def mtx(dummy: str = None) -> Response:
                                                                                                     "https://")
 
     remote_response = requests.get(
-        url, proxies={"https": server_configs.proxyAddress, "http": server_configs.proxyAddress}, timeout=30,
+        url, proxies={"https": config_store.get_config().proxyAddress, "http": config_store.get_config().proxyAddress}, timeout=30,
         verify=False, headers=request_header)
 
     response = make_response(remote_response.content)
@@ -131,7 +125,7 @@ def mtx(dummy: str = None) -> Response:
 def tiles(tile_x: str, tile_y: str, level_of_detail: str) -> Response:
     url = f'https://mt.google.com/vt/lyrs=s&x={tile_x}&y={tile_y}&z={level_of_detail}'
     content = requests.get(
-        url, proxies={"https": server_configs.proxyAddress, "http": server_configs.proxyAddress}, timeout=30,
+        url, proxies={"https": config_store.get_config().proxyAddress, "http": config_store.get_config().proxyAddress}, timeout=30,
         verify=False).content
 
     response = make_response(content)
@@ -178,7 +172,7 @@ def cache_layer(tile_x: str, tile_y: str, level_of_detail: str) -> Response:
 @app.route("/tiles/a<path>")
 def quad_tiles(path: str) -> Response:
     quadkey = re.findall(r"(\d+).jpeg", path)[0]
-    if server_configs.enableHighLOD:
+    if config_store.get_config().enableHighLOD:
         content = tiles_high_lod(quadkey)
     else:
         content = tiles_normal_lod(quadkey)
@@ -218,16 +212,16 @@ def quad_tiles(path: str) -> Response:
 
 
 def get_selected_map_provider():
-    return list(filter(lambda x: x.name == server_configs.selectedServer, map_providers))[0]
+    return list(filter(lambda x: x.name == config_store.get_config().selectedServer, map_providers))[0]
 
 
 def download_from_url(url):
     content = cache.get(url)
 
     if content is None:
-        logger.info("Downloading from: %s, %s", url, server_configs.proxyAddress)
+        logger.info("Downloading from: %s, %s", url, config_store.get_config().proxyAddress)
         resp = requests.get(
-            url, proxies={"https": server_configs.proxyAddress, "http": server_configs.proxyAddress}, timeout=30,
+            url, proxies={"https": config_store.get_config().proxyAddress, "http": config_store.get_config().proxyAddress}, timeout=30,
             verify=False)
 
         logger.info("Downloaded from: %s, speed: %f", url, resp.elapsed.total_seconds())

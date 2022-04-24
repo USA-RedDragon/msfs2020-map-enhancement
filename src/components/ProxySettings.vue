@@ -46,9 +46,16 @@ export default defineComponent({
     serverStarted: Boolean
   },
   data() {
+    let proxyAddress = "";
+
+    let serverConfig = store.get("serverConfig", undefined);
+    if (serverConfig != undefined) {
+      proxyAddress = serverConfig.proxyAddress;
+    }
+
     return {
       HEALTH_CHECK: HEALTH_CHECK,
-      proxyAddress: store.get("proxyAddress", ""),
+      proxyAddress,
       proxyTestResult: null
     };
   },
@@ -92,18 +99,20 @@ export default defineComponent({
         this.proxyTestResult = HEALTH_CHECK.Failed;
       }
     },
+    async reloadServer(serverConfig) {
+      store.set("serverConfig", serverConfig);
+      this.proxyAddress = serverConfig.proxyAddress;
+    },
     async updateConfig() {
-      store.set("proxyAddress", this.proxyAddress);
+      let serverConfig = JSON.parse((await got.get("http://localhost:39871/config")).body);
+      serverConfig.proxyAddress = this.proxyAddress;
+      
+      serverConfig = JSON.parse((await got.post("http://localhost:39871/config", {
+        json: serverConfig
+      })).body);
+      this.reloadServer(serverConfig);
 
-      if (this.serverStarted) {
-        await got.post("http://localhost:39871/configs", {
-          json: {
-            proxyAddress: this.proxyAddress
-          }
-        });
-
-        window.$message.info("Proxy config updated");
-      }
+      window.$message.info("Proxy config updated");
 
       log.info("Updated config");
     },

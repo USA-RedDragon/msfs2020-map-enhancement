@@ -89,37 +89,73 @@ export default defineComponent({
     serverStarted: Boolean
   },
   data() {
+    let selectedServer = "mt.google.com";
+    let mapboxAccessToken = "";
+    let enableHighLOD = false;
+
+    let serverConfig = store.get("serverConfig", undefined);
+    if (serverConfig != undefined) {
+      selectedServer = serverConfig.selectedServer;
+      mapboxAccessToken = serverConfig.mapboxAccessToken;
+      enableHighLOD = serverConfig.enableHighLOD;
+    }
+
     return {
       servers: ["mt.google.com", "khm.google.com", "ArcGIS", "Bing Map (Latest)", "Mapbox"],
-      selectedServer: store.get("selectedServer", "mt.google.com"),
-      mapboxAccessToken: store.get("mapboxAccessToken", ""),
-      enableHighLOD: store.get("enableHighLOD", false)
+      selectedServer,
+      mapboxAccessToken,
+      enableHighLOD,
     };
   },
   watch: {
     mapboxAccessToken: function(val, oldVal) {
-      store.set("mapboxAccessToken", val);
+      got.get("http://localhost:39871/config").then((res) => {
+        let serverConfig = JSON.parse(res.body);
+        serverConfig.mapboxAccessToken = val;
+
+        got.post("http://localhost:39871/config", {
+          json: serverConfig
+        }).then((res) => {
+          serverConfig = JSON.parse(res.body);
+          this.reloadServer(serverConfig);
+        })
+      });
     },
     enableHighLOD: function(val) {
-      store.set("enableHighLOD", val);
+      got.get("http://localhost:39871/config").then((res) => {
+        let serverConfig = JSON.parse(res.body);
+        serverConfig.enableHighLOD = val;
+
+        got.post("http://localhost:39871/config", {
+          json: serverConfig
+        }).then((res) => {
+          serverConfig = JSON.parse(res.body);
+          this.reloadServer(serverConfig);
+        })
+      });
     }
   },
   methods: {
+    async reloadServer(serverConfig) {
+      store.set("serverConfig", serverConfig);
+
+      this.selectedServer = serverConfig.selectedServer;
+      this.mapboxAccessToken = serverConfig.mapboxAccessToken;
+      this.enableHighLOD = serverConfig.enableHighLOD;
+    },
     async updateConfig() {
       log.info("Updating config", this.selectedServer);
-      store.set("selectedServer", this.selectedServer);
+      
+      let serverConfig = JSON.parse((await got.get("http://localhost:39871/config")).body);
+      serverConfig.selectedServer = this.selectedServer;
 
-      if (this.serverStarted) {
-        log.info("Update server");
-        await got.post("http://localhost:39871/configs", {
-          json: {
-            selectedServer: this.selectedServer,
-            enableHighLOD: this.enableHighLOD
-          }
-        });
+      log.info("Update server");
+      serverConfig = JSON.parse((await got.post("http://localhost:39871/config", {
+        json: serverConfig
+      })).body);
+      this.reloadServer(serverConfig);
 
-        //await got.post("http://localhost:39871/clear-cache");
-      }
+      //await got.post("http://localhost:39871/clear-cache");
 
       log.info("Updated config");
     }

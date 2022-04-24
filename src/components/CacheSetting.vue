@@ -56,18 +56,21 @@ const getDefaultPath = () => {
 export default defineComponent({
   name: "CacheSetting",
   data() {
-    if (store.get("cacheLocation") === undefined) {
-      store.set("cacheLocation", getDefaultPath());
-    }
+    let cacheLocation = "";
+    let cacheEnabled = false;
+    let cacheSizeGB = 10;
 
-    if (store.get("enableCache") === undefined) {
-      store.set("enableCache", false);
+    let serverConfig = store.get("serverConfig", undefined);
+    if (serverConfig != undefined) {
+      cacheLocation = serverConfig.cacheLocation;
+      cacheEnabled = serverConfig.cacheEnabled;
+      cacheSizeGB = serverConfig.cacheSizeGB;
     }
 
     return {
-      cacheLocation: store.get("cacheLocation"),
-      cacheEnabled: store.get("enableCache"),
-      cacheSizeGB: store.get("cacheSizeGB", 10)
+      cacheLocation,
+      cacheEnabled,
+      cacheSizeGB,
     };
   },
   methods: {
@@ -82,17 +85,54 @@ export default defineComponent({
       } catch (e) {
         window.$message.error("Please start injection and then clear cache");
       }
+    },
+    async reloadServer(serverConfig) {
+      store.set("serverConfig", serverConfig);
+
+      this.cacheLocation = serverConfig.cacheLocation;
+      this.cacheEnabled = serverConfig.cacheEnabled;
+      this.cacheSizeGB = serverConfig.cacheSizeGB;
     }
   },
   watch: {
     cacheEnabled: function(val, oldVal) {
-      store.set("enableCache", val);
+      got.get("http://localhost:39871/config").then((res) => {
+        let serverConfig = JSON.parse(res.body);
+        serverConfig.cacheEnabled = val;
+
+        got.post("http://localhost:39871/config", {
+          json: serverConfig
+        }).then((res) => {
+          serverConfig = JSON.parse(res.body);
+          this.reloadServer(serverConfig);
+        })
+      });
     },
     cacheLocation: function(val, oldVal) {
-      store.set("cacheLocation", val);
+      got.get("http://localhost:39871/config").then((res) => {
+        let serverConfig = JSON.parse(res.body);
+        serverConfig.cacheLocation = val;
+
+        got.post("http://localhost:39871/config", {
+          json: serverConfig
+        }).then((res) => {
+          serverConfig = JSON.parse(res.body);
+          this.reloadServer(serverConfig);
+        })
+      });
     },
     cacheSizeGB: function(val, oldVal){
-      store.set("cacheSizeGB", val)
+      got.get("http://localhost:39871/config").then((res) => {
+        let serverConfig = JSON.parse(res.body);
+        serverConfig.cacheSizeGB = val;
+
+        got.post("http://localhost:39871/config", {
+          json: serverConfig
+        }).then((res) => {
+          serverConfig = JSON.parse(res.body);
+          this.reloadServer(serverConfig);
+        })
+      });
     }
   }
 });

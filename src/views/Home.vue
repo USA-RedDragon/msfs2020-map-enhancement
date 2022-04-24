@@ -4,7 +4,7 @@
       <n-layout-content>
         <n-card v-bind:title="'MSFS2020 Map Replacement v' + appVersion" style="margin-bottom: 16px">
           <UpdateNotification />
-          <n-tabs type="line">
+          <n-tabs type="line" @before-leave="handleBeforeLeave">
             <n-tab-pane name="Mod Control" tab="Mod Control">
               <n-space vertical size="medium">
                 <n-space horizontal size="large">
@@ -169,15 +169,7 @@ export default defineComponent({
       this.serverStatus = SERVER_STATUS.Starting;
 
       const result = await window.ipcRenderer
-        .invoke(EVENT_START_SERVER, {
-          proxyAddress: store.get("proxyAddress", ""),
-          selectedServer: store.get("selectedServer", "mt.google.com"),
-          cacheLocation: store.get("cacheLocation"),
-          cacheEnabled: store.get("enableCache", false),
-          cacheSizeGB: store.get("cacheSizeGB", 10),
-          mapboxAccessToken: store.get("mapboxAccessToken"),
-          enableHighLOD: store.get("enableHighLOD", false)
-        });
+        .invoke(EVENT_START_SERVER);
 
       log.info("Start mod result", result);
 
@@ -259,6 +251,9 @@ export default defineComponent({
 
         if (resp.statusCode === 200) {
           this.imageAccessHealthCheckResult = HEALTH_CHECK.Passed;
+          got.get("http://localhost:39871/config").then((serverConfigReq) => {
+            store.set("serverConfig", JSON.parse(serverConfigReq.body));
+          });
         } else {
           this.imageAccessHealthCheckResult = HEALTH_CHECK.Failed;
         }
@@ -280,7 +275,21 @@ export default defineComponent({
             distributor: this.distributor
           });
       }
-    }
+    },
+    handleBeforeLeave(tabName) {
+        switch (tabName) {
+          case 'Cache':
+          case 'Map Options':
+          case 'Proxy Settings':
+            if (this.imageAccessHealthCheckResult != HEALTH_CHECK.Passed) {
+              window.$message.error('Some options unavailable until server starts.')
+              return false
+            }
+            return true
+          default:
+            return true
+        }
+      },
   }
 });
 </script>
