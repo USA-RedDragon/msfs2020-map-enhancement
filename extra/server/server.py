@@ -1,4 +1,5 @@
 import ast
+import atexit
 import concurrent
 import os
 import sys
@@ -322,4 +323,5 @@ def offline_download_worker(regions):
                                         get_selected_map_provider().tile_url(tile_x, tile_y, zoom_level))
 
 
+atexit.register(unpatch_hosts)
 app.run(port=39871, threaded=True)
