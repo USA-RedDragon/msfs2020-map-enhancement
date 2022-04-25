@@ -9,7 +9,18 @@ import {
   EVENT_START_SERVER,
   EVENT_STOP_SERVER,
   EVENT_RELOAD_TRAY,
+  EVENT_ADD_STARTUP,
+  EVENT_REMOVE_STARTUP,
 } from "@/consts/custom-events";
+import {
+  IMAGE_SERVER_SERVICE,
+  NGINX_SERVICE,
+} from "@/consts/constants";
+
+import sudo from "sudo-prompt";
+const options = {
+  name: 'MSFS2020 Map Enhancement',
+};
 
 import { addCertificate } from "@/services/certificate";
 import { startMapServer, stopServer } from "@/services/mapServer";
@@ -18,7 +29,10 @@ import { startMapServer, stopServer } from "@/services/mapServer";
 import log from "electron-log";
 import got from "got";
 
+import winlink from "winlink";
+
 import path from "path";
+import fs from "fs";
 // @ts-ignore
 import Store from "electron-store";
 import { startGame } from "@/services/game";
@@ -73,8 +87,11 @@ async function createWindow() {
 }
 
 app.on("window-all-closed", async () => {
+  const store = new Store();
   try {
-    await StopServer();
+    if (!store.get("runOnBoot", false)) {
+      await StopServer();
+    }
   } catch (e) {
     log.info("Window closing, error", e);
   }
@@ -119,7 +136,7 @@ ipcMain.handle(EVENT_START_SERVER, (event, arg) => {
     addCertificate().then(() => {
       startMapServer().then(() => {
         got.get("http://localhost:39871/patch-hosts").then(() => {
-    log.info("Start map server success");
+          log.info("Start map server success");
           resolve(true);
         }).catch((e) => {
           log.error(e);
@@ -165,4 +182,36 @@ ipcMain.handle(EVENT_START_GAME, async (event, arg) => {
 
 ipcMain.handle(EVENT_RELOAD_TRAY, async () => {
   tray.reloadConfig();
+});
+
+ipcMain.handle(EVENT_ADD_STARTUP, () => {
+  const APPDATA = process.env['APPDATA'];
+
+  winlink.writeFile(`${APPDATA}/Microsoft/Windows/Start Menu/Programs/Startup/MSFS2020 Map Enhancement.lnk`,
+    path.join(__dirname, "../../MSFS2020 Map Enhancement.exe")).catch((error) => {
+      log.error(error);
+    })
+
+  sudo.exec(`sc config ${IMAGE_SERVER_SERVICE} start=auto & sc config ${NGINX_SERVICE} start=auto`, options,
+    function(error: Error, stdout: string, stderr: string) {
+      if (error) {
+        log.error(error);
+      } else {
+        startMapServer()
+      }
+    }
+  );
+});
+
+ipcMain.handle(EVENT_REMOVE_STARTUP, () => {
+  sudo.exec(`sc config ${IMAGE_SERVER_SERVICE} start=demand & sc config ${NGINX_SERVICE} start=demand`, options,
+    function(error: Error, stdout: string, stderr: string) {
+      if (error) {
+        log.error(error);
+      }
+    }
+  );
+
+  const APPDATA = process.env['APPDATA'];
+  fs.rmSync(`${APPDATA}/Microsoft/Windows/Start Menu/Programs/Startup/MSFS2020 Map Enhancement.lnk`)
 });

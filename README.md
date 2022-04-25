@@ -25,7 +25,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ## TODO
 
-- background.ts - add EVENT_ADD_STARTUP handling to set services to auto and add a startup shortcut
 - Add CI
 - Add E2E tests
 - Add unit tests
