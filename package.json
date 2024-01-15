@@ -20,7 +20,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@geoman-io/leaflet-geoman-free": "^2.11.4",
+    "@geoman-io/leaflet-geoman-free": "^2.15.0",
     "@vicons/ionicons5": "^0.11.0",
     "core-js": "^3.6.5",
     "dns": "^0.2.2",
