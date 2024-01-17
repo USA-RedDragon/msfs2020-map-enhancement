@@ -33,4 +33,4 @@ jobs:
         run: ./extra/nginx/conf/mkcert.exe -cert-file extra/nginx/conf/cert.pem -key-file extra/nginx/conf/key.pem 'kh.ssl.ak.tiles.virtualearth.net' 'khstorelive.azureedge.net' '*.virtualearth.net' '*.azureedge.net'
 
       - run: npm ci
-      - run: npm run electron:build
+      - run: npm run electron:build -- -p never
