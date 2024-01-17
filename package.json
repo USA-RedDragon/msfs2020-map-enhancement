@@ -9,7 +9,10 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
+    "lint": "vue-cli-service lint --no-fix",
+    "lint:fix": "npm run lint -- --fix",
+    "lint:report": "npm run lint -- --output-file eslint_report.json --format json",
+    "typecheck": "tsc --noEmit",
     "build:python": "pwsh -ExecutionPolicy Bypass -File extra/server/scripts/package.ps1",
     "build:nginx": "pwsh -ExecutionPolicy Bypass -File extra/nginx/scripts/package.ps1",
     "build:service-wrappers": "pwsh -ExecutionPolicy Bypass -File extra/compile-service-wrappers.ps1",

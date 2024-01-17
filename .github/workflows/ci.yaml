@@ -34,3 +34,46 @@ jobs:
 
       - run: npm ci
       - run: npm run electron:build -- -p never
+
+  node-typecheck:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - run: npm ci
+      - run: npm run typecheck
+
+  node-lint:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      - run: npm ci
+      - run: npm run lint:report
+
+      - name: Annotate Code Linting Results
+        if: always()
+        uses: ataylorme/eslint-annotate-action@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          report-json: "eslint_report.json"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eslint-report
+          if-no-files-found: error
+          retention-days: 30
+          path: eslint_report.json
