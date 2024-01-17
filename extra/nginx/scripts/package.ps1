@@ -1,3 +1,5 @@
+Import-Module Microsoft.PowerShell.Utility;
+
 $NginxVersion = "1.21.6"
 
 $top = git rev-parse --show-toplevel

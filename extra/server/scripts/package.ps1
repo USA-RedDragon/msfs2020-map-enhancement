@@ -1,3 +1,5 @@
+Import-Module Microsoft.PowerShell.Utility;
+
 $PythonVersion = "3.9.9"
 $InternalPythonShort = "39"
 
