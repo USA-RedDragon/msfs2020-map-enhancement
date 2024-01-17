@@ -172,7 +172,7 @@ async function StopServer() {
 ipcMain.handle(EVENT_CHECK_UPDATE, async () => {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
-  let updateCheckResult = await autoUpdater.checkForUpdates();
+  const updateCheckResult = await autoUpdater.checkForUpdates();
   return updateCheckResult.updateInfo;
 });
 
