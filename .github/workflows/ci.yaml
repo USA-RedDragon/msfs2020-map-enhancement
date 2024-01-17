@@ -26,7 +26,7 @@ jobs:
         run: |
           set "extractPath=C:\Program Files\PowerShell\7"
           curl -sLO https://github.com/PowerShell/PowerShell/releases/download/v7.4.1/PowerShell-7.4.1-win-x64.zip
-          RMDIR "%extractPath%" /S /Q
+          RMDIR -r "%extractPath%"
           7z x PowerShell-7.4.1-win-x64.zip -o"%extractPath%"
 
       - run: npm ci
