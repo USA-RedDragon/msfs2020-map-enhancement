@@ -32,7 +32,7 @@ export default defineComponent({
   methods: {
     async checkAppUpdate() {
       const updateCheckResult = await window.ipcRenderer.invoke(EVENT_CHECK_UPDATE);
-      console.log(updateCheckResult);
+      log.debug(updateCheckResult);
       const appVersion = window.require("electron").remote.app.getVersion();
       this.updateAvailable = appVersion !== updateCheckResult.version;
       if (!this.updateAvailable) {
