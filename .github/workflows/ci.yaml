@@ -24,10 +24,13 @@ jobs:
 
       - name: Install Powershell 7.4.1
         run: |
-          $extractPath = "C:\Program Files\PowerShell\7"
+          $extractPath = "C:\Program Files\PowerShell\7.4.1"
           curl -sLO https://github.com/PowerShell/PowerShell/releases/download/v7.4.1/PowerShell-7.4.1-win-x64.zip
-          RMDIR -r "$extractPath"
           7z x PowerShell-7.4.1-win-x64.zip -o"$extractPath"
+          echo "C:\Program Files\PowerShell\7.4.1" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Generate certs
+        run: ./extra/nginx/conf/mkcert.exe -cert-file extra/nginx/conf/cert.pem -key-file extra/nginx/conf/key.pem 'kh.ssl.ak.tiles.virtualearth.net' 'khstorelive.azureedge.net' '*.virtualearth.net' '*.azureedge.net'
 
       - run: npm ci
       - run: npm run electron:build
