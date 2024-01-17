@@ -27,7 +27,7 @@
     "@vicons/ionicons5": "^0.11.0",
     "core-js": "^3.35.0",
     "dns": "^0.2.2",
-    "electron-log": "^4.4.1",
+    "electron-log": "^4.4.8",
     "electron-store": "^8.0.1",
     "electron-updater": "^4.6.1",
     "got": "^11.8.3",
