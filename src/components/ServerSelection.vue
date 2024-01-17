@@ -108,7 +108,7 @@ export default defineComponent({
     };
   },
   watch: {
-    mapboxAccessToken: function(val, oldVal) {
+    mapboxAccessToken: function(val, _oldVal) {
       got.get("http://localhost:39871/config").then((res) => {
         let serverConfig = JSON.parse(res.body);
         serverConfig.mapboxAccessToken = val;

@@ -1,6 +1,6 @@
 "use strict";
 import { autoUpdater } from "electron-updater";
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, shell } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS3_DEVTOOLS } from "electron-devtools-installer";
 import {
@@ -24,16 +24,17 @@ const options = {
 
 import { addCertificate } from "@/services/certificate";
 import { startMapServer, stopServer } from "@/services/mapServer";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+
 import log from "electron-log";
 import got from "got";
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import winlink from "winlink";
 
 import path from "path";
 import fs from "fs";
-// @ts-ignore
+
 import Store from "electron-store";
 import { startGame } from "@/services/game";
 import Tray from "@/services/tray";
@@ -74,7 +75,7 @@ async function createWindow() {
 
   win.webContents.on("new-window", function (e, url) {
     e.preventDefault();
-    require("electron").shell.openExternal(url);
+    shell.openExternal(url);
   });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -109,8 +110,8 @@ app.on("ready", async () => {
   if (isDevelopment && !process.env.IS_TEST) {
     try {
       await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      log.error("Vue Devtools failed to install:", e.toString());
+    } catch (e: unknown) {
+      log.error("Vue Devtools failed to install:", (e as Error).toString());
     }
   }
   await createWindow();
@@ -131,7 +132,7 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.handle(EVENT_START_SERVER, (event, arg) => {
+ipcMain.handle(EVENT_START_SERVER, (_event, _arg) => {
   return new Promise<boolean>((resolve, reject) => {
     addCertificate().then(() => {
       startMapServer().then(() => {
@@ -153,7 +154,7 @@ ipcMain.handle(EVENT_START_SERVER, (event, arg) => {
   });
 });
 
-ipcMain.handle(EVENT_STOP_SERVER, async (event, arg) => {
+ipcMain.handle(EVENT_STOP_SERVER, async (_event, _arg) => {
   try {
     await StopServer();
     log.info("Stop server success");
@@ -188,12 +189,12 @@ ipcMain.handle(EVENT_ADD_STARTUP, () => {
   const APPDATA = process.env['APPDATA'];
 
   winlink.writeFile(`${APPDATA}/Microsoft/Windows/Start Menu/Programs/Startup/MSFS2020 Map Enhancement.lnk`,
-    path.join(__dirname, "../../MSFS2020 Map Enhancement.exe")).catch((error) => {
+    path.join(__dirname, "../../MSFS2020 Map Enhancement.exe")).catch((error: unknown) => {
       log.error(error);
     })
 
   sudo.exec(`sc config ${IMAGE_SERVER_SERVICE} start=auto & sc config ${NGINX_SERVICE} start=auto`, options,
-    function(error: Error, stdout: string, stderr: string) {
+    function(error: Error | undefined, _stdout: string | Buffer | undefined, _stderr: string | Buffer | undefined) {
       if (error) {
         log.error(error);
       } else {
@@ -205,7 +206,7 @@ ipcMain.handle(EVENT_ADD_STARTUP, () => {
 
 ipcMain.handle(EVENT_REMOVE_STARTUP, () => {
   sudo.exec(`sc config ${IMAGE_SERVER_SERVICE} start=demand & sc config ${NGINX_SERVICE} start=demand`, options,
-    function(error: Error, stdout: string, stderr: string) {
+    function(error: Error | undefined, _stdout: string | Buffer | undefined, _stderr: string | Buffer | undefined) {
       if (error) {
         log.error(error);
       }

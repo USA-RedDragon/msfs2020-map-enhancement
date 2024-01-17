@@ -288,40 +288,5 @@ def tiles_high_lod(quadkey):
 
     return img_byte_arr
 
-
-@app.route("/offlinedownload", methods=['POST'])
-def offline_download():
-    body = request.get_json()
-
-    regions = []
-    for feature in body['features']:
-        regions.append(feature['geometry']['coordinates'][0])
-
-    offline_download_thread = Thread(target=offline_download_worker, args=(regions,))
-    offline_download_thread.start()
-
-    return jsonify({})
-
-
-def offline_download_worker(regions):
-    for region in regions:
-        polygon = Polygon(region)
-        with ThreadPoolExecutor(max_workers=50) as exec:
-            for zoom_level in range(6, 16):
-                left_top = Tile.for_latitude_longitude(polygon.bounds[1], polygon.bounds[0], zoom_level)
-                right_bottom = Tile.for_latitude_longitude(polygon.bounds[3], polygon.bounds[2], zoom_level)
-                print(left_top.google, right_bottom.google)
-                for tile_x in range(left_top.google[0], right_bottom.google[0] + 1):
-                    for tile_y in range(right_bottom.google[1], left_top.google[1] + 1):
-                        point_min, point_max = Tile.from_google(tile_x, tile_y, zoom_level).bounds
-
-                        pmin = geometry.Point(point_min.longitude, point_min.latitude)
-                        pmax = geometry.Point(point_max.longitude, point_max.latitude)
-
-                        if polygon.contains(pmin) or polygon.contains(pmax):
-                            exec.submit(download_from_url,
-                                        get_selected_map_provider().tile_url(tile_x, tile_y, zoom_level))
-
-
 atexit.register(unpatch_hosts)
 app.run(port=39871, threaded=True)

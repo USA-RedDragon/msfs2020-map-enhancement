@@ -1,9 +1,6 @@
-import { execFile } from "child_process";
 import path from "path";
 import fs from "fs";
-// @ts-ignore
 import log from "electron-log";
-import util from "util";
 
 import sudo from "sudo-prompt";
 const options = {
@@ -19,7 +16,7 @@ export const addCertificate = (): Promise<void> => {
       resolve();
     } else {
       sudo.exec(`"${CONF_DIR}/mkcert.exe" -install -key-file "${CONF_DIR}/key.pem" -cert-file "${CONF_DIR}/cert.pem" kh.ssl.ak.tiles.virtualearth.net khstorelive.azureedge.net *.virtualearth.net *.azureedge.net`, options,
-        function(error: Error, stdout: string, stderr: string) {
+        function(error: Error | undefined, stdout: string | Buffer | undefined, _stderr: string | Buffer | undefined) {
           if (error) {
             reject(error);
             return;

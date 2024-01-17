@@ -1,5 +1,4 @@
-import { fork, execFile, spawn, ChildProcess } from "child_process";
-import path from "path";
+import {  execFile } from "child_process";
 import log from "electron-log";
 import util from "util";
 
@@ -75,7 +74,7 @@ export async function startMapServer(): Promise<void> {
 
         if (startImageServer || startNginx) {
           sudo.exec(command, options,
-            function(error: Error, stdout: string, stderr: string) {
+            function(error: Error | undefined, _stdout: string | Buffer | undefined, _stderr: string | Buffer | undefined) {
               if (error) {
                 reject(error);
                 return;
@@ -90,26 +89,6 @@ export async function startMapServer(): Promise<void> {
       });
     });
   })
-}
-
-function setupLog(process: ChildProcess, name: string) {
-  process.stdout!.setEncoding("utf8");
-  process.stdout!.on("data", function (data) {
-    log.info(`${name}:`, data);
-  });
-
-  process.stderr!.setEncoding("utf8");
-  process.stderr!.on("error", function (data) {
-    log.info(`${name}:`, data);
-  });
-
-  process.on("close", function (code) {
-    log.log(`${name} Process closed`, code);
-  });
-
-  process.on("error", (err) => {
-    log.error(`${name} Failed to start process`, err);
-  });
 }
 
 export async function stopServer(): Promise<void> {
@@ -138,7 +117,7 @@ export async function stopServer(): Promise<void> {
 
         if (stopImageServer || stopNginx) {
           sudo.exec(command, options,
-            function(error: Error, stdout: string, stderr: string) {
+            function(error: Error | undefined, _stdout: string | Buffer | undefined, _stderr: string | Buffer | undefined) {
               if (error) {
                 reject(error);
                 return;

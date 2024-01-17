@@ -38,16 +38,11 @@
 
 <script>
 import Store from "electron-store";
-import electron from "electron";
 
 const store = new Store();
 
 import { defineComponent } from "vue";
 import got from "got";
-
-const getDirectory = (path) => {
-  return path.substring(0, path.lastIndexOf("\\") + 1);
-};
 
 const getDefaultPath = () => {
   return ".\\cache";
@@ -95,7 +90,7 @@ export default defineComponent({
     }
   },
   watch: {
-    cacheEnabled: function(val, oldVal) {
+    cacheEnabled: function(val, _oldVal) {
       got.get("http://localhost:39871/config").then((res) => {
         let serverConfig = JSON.parse(res.body);
         serverConfig.cacheEnabled = val;
@@ -108,7 +103,7 @@ export default defineComponent({
         })
       });
     },
-    cacheLocation: function(val, oldVal) {
+    cacheLocation: function(val, _oldVal) {
       got.get("http://localhost:39871/config").then((res) => {
         let serverConfig = JSON.parse(res.body);
         serverConfig.cacheLocation = val;
@@ -121,7 +116,7 @@ export default defineComponent({
         })
       });
     },
-    cacheSizeGB: function(val, oldVal){
+    cacheSizeGB: function(val, _oldVal){
       got.get("http://localhost:39871/config").then((res) => {
         let serverConfig = JSON.parse(res.body);
         serverConfig.cacheSizeGB = val;

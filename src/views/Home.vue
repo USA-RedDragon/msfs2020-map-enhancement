@@ -54,9 +54,6 @@
             <n-tab-pane name="Cache" tab="Cache">
               <CacheSetting />
             </n-tab-pane>
-<!--            <n-tab-pane name="Offline Download" tab="Offline Download">-->
-<!--              <OfflineDownload />-->
-<!--            </n-tab-pane>-->
             <n-tab-pane name="Proxy Settings" tab="Proxy Settings">
               <ProxySettings v-bind:server-started="serverStarted" />
             </n-tab-pane>
@@ -92,7 +89,6 @@ import Debug from "@/components/Debug";
 import ServerSelection from "@/components/ServerSelection";
 import ServerCheck from "@/components/ServerCheck";
 import CacheSetting from "@/components/CacheSetting";
-import OfflineDownload from "@/components/OfflineDownload";
 import SystemTray from "@/components/SystemTray";
 
 const messageOptions = { keepAliveOnHover: true, closable: true };
@@ -100,7 +96,6 @@ const messageOptions = { keepAliveOnHover: true, closable: true };
 export default defineComponent({
   name: "Home",
   components: {
-    // OfflineDownload,
     ServerCheck,
     ServerSelection,
     Debug,
