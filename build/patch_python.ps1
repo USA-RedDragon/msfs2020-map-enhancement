@@ -1,3 +1,7 @@
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
 $InternalPythonShort = "39"
 $installDir = $args[0]
 $serverPath = "$installDir/resources/extra/server"

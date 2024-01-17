@@ -1,3 +1,7 @@
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
 $top = git rev-parse --show-toplevel
 
 C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc "$top\extra\server\service-wrapper\service.cs"

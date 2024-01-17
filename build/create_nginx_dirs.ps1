@@ -1,3 +1,7 @@
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
 $installDir = $args[0]
 $nginxPath = "$installDir/resources/extra/nginx"
 

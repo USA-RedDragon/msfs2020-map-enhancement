@@ -1,3 +1,7 @@
+Set-StrictMode -Version 3.0
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
 Import-Module Microsoft.PowerShell.Utility;
 
 $NginxVersion = "1.21.6"
