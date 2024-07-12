@@ -55,7 +55,7 @@
     "@vue/compiler-sfc": "^3.4.31",
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^7.0.0",
-    "electron": "13.6.9",
+    "electron": "15.5.7",
     "electron-builder": "^24.13.3",
     "electron-devtools-installer": "^3.2.0",
     "eslint": "^6.8.0",
