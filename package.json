@@ -53,7 +53,7 @@
     "@vue/cli-plugin-vuex": "~4.5.19",
     "@vue/cli-service": "~4.5.19",
     "@vue/compiler-sfc": "^3.4.31",
-    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^7.0.0",
     "electron": "13.6.9",
     "electron-builder": "^24.13.3",
