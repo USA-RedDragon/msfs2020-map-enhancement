@@ -30,7 +30,7 @@
     "electron-log": "^4.4.8",
     "electron-store": "^8.2.0",
     "electron-updater": "^4.6.5",
-    "got": "^11.8.6",
+    "got": "^12.6.1",
     "hpagent": "^1.2.0",
     "http2": "^3.3.7",
     "leaflet": "^1.9.4",
